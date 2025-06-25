@@ -1,0 +1,32 @@
+from uuid import UUID
+import uuid
+from sqlalchemy import Column, String, TIMESTAMP
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
+from .base import Base
+from .profile import Profile
+from .issue import Issue
+from .follow import Follow
+
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(UUID(as_uuid=True), primary_key=True,
+                default=uuid.uuid4, index=True)
+    google_id = Column(String)
+    email = Column(String)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False)
+
+    profile = relationship(Profile, back_populates="user", uselist=False)
+    issues = relationship(Issue, back_populates="user")
+
+    followers = relationship(
+        'Follow',
+        foreign_keys='Follow.followed_user_id',
+        back_populates='followed'
+    )
+    following = relationship(
+        'Follow',
+        foreign_keys='Follow.follower_user_id',
+        back_populates='follower'
+    )
