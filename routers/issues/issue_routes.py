@@ -9,9 +9,9 @@ router = APIRouter(prefix="/issues", tags=["issues"])
 
 
 @router.get("/")
-def get_issues():
+def get_issues(limit: int = 10, cursor: str | None = None, db: Session = Depends(get_db)):
     try:
-        return get_latest_issues()
+        return get_latest_issues(cursor=cursor, limit=limit, db=db)
     except Exception:
         raise HTTPException(
             status_code=500, detail="Failed to fetch issues. Please try again later.")
@@ -24,8 +24,7 @@ def create_issue(issue_data: IssueCreate, db: Session = Depends(get_db), current
         if not user_id:
             raise HTTPException(
                 status_code=401, detail="User not authenticated.")
-        issue_data.user_id = user_id
-        return create_issue_in_db(issue_data, db)
+        return create_issue_in_db(issue_data, db, user_id)
     except HTTPException as e:
         raise e
     except Exception:
@@ -40,14 +39,19 @@ def update_issue(issue_id: str, issue_data: IssueUpdate, db: Session = Depends(g
         if not user_id:
             raise HTTPException(
                 status_code=401, detail="User not authenticated.")
-        if issue_data.user_id == user_id:
-            return update_issue_in_db(issue_id, issue_data, db)
-        else:
-            raise HTTPException(
-                status_code=403, detail="User not authorized to update this issue.")
+            
+        issue_data.is_edited = True  # Ensure is_edited is set to True on update
+            
+        return update_issue_in_db(issue_id, issue_data, db, user_id)
+
     except HTTPException as e:
+        import logging
+        logging.exception(
+            "Error updating issue with ID %s: %s", issue_id, str(e))
         raise e
-    except Exception:
+    except Exception as e:
+        import logging
+        logging.exception("Error updating issue with ID %s: %s", issue_id, str(e))
         raise HTTPException(
             status_code=500, detail="Failed to update issue. Please try again later.")
 

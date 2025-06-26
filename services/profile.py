@@ -13,10 +13,18 @@ def onboard_service(user_data, user_id, db):
             raise HTTPException(
                 status_code=400, detail="User already onboarded")
 
-        user_data.user_id = user_id
-        db.add(user_data)
+        data = Profile(
+            user_id=user_id,
+            fullname=user_data.fullname,
+            role=user_data.role,
+            following_users=user_data.following_users or [],
+            following_issues=user_data.following_issues or [],
+            following_depts=user_data.following_depts or [],
+            following_locations=user_data.following_locations or []
+        )
+        db.add(data)
         db.commit()
-        db.refresh(user_data)
+        db.refresh(data)
 
     except Exception as e:
         raise HTTPException(

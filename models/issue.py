@@ -21,10 +21,10 @@ class Issue(Base):
     current_status = Column(String, nullable=False)
     issue_time = Column(TIMESTAMP(timezone=True))
     is_anonymous = Column(Boolean)
-    evidence_url = Column(JSON)
+    evidence_url = Column(JSON, nullable=True)
     created_at = Column(TIMESTAMP(timezone=True))
-    is_edited = Column(Boolean)
-    is_deleted = Column(Boolean)
+    is_edited = Column(Boolean, default=False)
+    is_deleted = Column(Boolean, default=False)
 
     user = relationship("User", back_populates="issues")
     employee = relationship("Employee", back_populates="issues")

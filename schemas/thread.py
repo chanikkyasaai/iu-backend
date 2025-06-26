@@ -19,12 +19,12 @@ class ThreadCreate(ThreadBase):
     pass
 
 class ThreadUpdate(ThreadBase):
-    id: UUID
+    issue_id: Optional[UUID] = None
     thread_headline: Optional[str] = None
     thread_desc: Optional[str] = None
     thread_type: Optional[str] = None
     created_at: Optional[datetime] = None
-    is_edited: Optional[bool] = None
+    is_edited: Optional[bool] = True
     is_deleted: Optional[bool] = None
     evidence_url: Optional[Any] = None
 

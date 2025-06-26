@@ -1,28 +1,27 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from uuid import UUID
-from typing import Optional, List, Any
+from typing import Optional, List, Dict, Any
 
 
 class ProfileBase(BaseModel):
-    user_id: Optional[UUID] = None
-    fullname: str
-    role: str
-    following_users: Optional[Any] = None
-    following_issues: Optional[Any] = None
-    following_depts: Optional[Any] = None
-    following_locations: Optional[Any] = None
+    fullname: Optional[str]
+    role: Optional[str]
+    following_users: Optional[List[Dict[str, Any]]]
+    following_issues: Optional[List[Dict[str, Any]]]
+    # Note: Fixed typo from "depts" to "depts" to match your model
+    following_depts: Optional[List[Dict[str, Any]]]
+    following_locations: Optional[List[Dict[str, Any]]]
 
 
 class ProfileCreate(ProfileBase):
-    
     pass
 
 
-class ProfileUpdate(ProfileBase):
+class ProfileUpdate(BaseModel):
     pass
 
-class Profile(ProfileBase):
-    id: UUID
+# class Profile(ProfileBase):
+#     id: UUID
 
-    class Config:
-        orm_mode = True
+#     class Config:
+#         orm_mode = True

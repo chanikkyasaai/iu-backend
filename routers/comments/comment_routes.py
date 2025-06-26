@@ -44,6 +44,7 @@ def update_comment(comment_id: str, comment_data: CommentUpdate, db: Session = D
         if not user_id:
             raise HTTPException(
                 status_code=401, detail="User not authenticated.")
+            
         return update_comment_in_db(comment_id, comment_data, user_id, db)
     except Exception:
         raise HTTPException(

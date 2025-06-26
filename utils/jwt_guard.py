@@ -39,9 +39,9 @@ def verify_token(token: str, token_type: str = "access"):
         if payload.get("type") != token_type:
             raise HTTPException(status_code=401, detail="Invalid token type")
         return payload
-    except (jwt.JWTError, ValidationError):
+    except (ValidationError):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=401,
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )

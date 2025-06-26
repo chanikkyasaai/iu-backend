@@ -58,18 +58,14 @@ def update_thread_in_db(thread_id: str, thread_data, user_id: str, db: Session):
         if not user_id:
             raise HTTPException(status_code=400, detail="User ID is required.")
 
-        stmt = select(Thread).where(
-            Thread.id == thread_id, Thread.is_deleted == False)
-        thread = db.execute(stmt).scalar_one_or_none()
+        thread = db.query(Thread).filter(
+            Thread.id == thread_id, Thread.is_deleted == False).first()
         if not thread:
             raise HTTPException(
                 status_code=404, detail="Thread not found or has been deleted.")
 
-        thread.thread_headline = thread_data.thread_headline or thread.thread_headline
-        thread.thread_desc = thread_data.thread_desc or thread.thread_desc
-        thread.thread_type = thread_data.thread_type or thread.thread_type
-        thread.is_edited = True
-        thread.evidence_url = thread_data.evidence_url or thread.evidence_url
+        for key, value in thread_data.dict(exclude_unset=True).items():
+            setattr(thread, key, value)
 
         db.commit()
         db.refresh(thread)

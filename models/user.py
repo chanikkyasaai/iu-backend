@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship
 from .base import Base
 from .profile import Profile
 from .issue import Issue
-from .follow import Follow
+# from .follow import Follow
 
 
 class User(Base):
@@ -19,14 +19,5 @@ class User(Base):
 
     profile = relationship(Profile, back_populates="user", uselist=False)
     issues = relationship(Issue, back_populates="user")
+    comments = relationship("Comment", back_populates="user")
 
-    followers = relationship(
-        'Follow',
-        foreign_keys='Follow.followed_user_id',
-        back_populates='followed'
-    )
-    following = relationship(
-        'Follow',
-        foreign_keys='Follow.follower_user_id',
-        back_populates='follower'
-    )

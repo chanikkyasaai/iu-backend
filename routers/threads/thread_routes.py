@@ -47,6 +47,8 @@ def update_thread(thread_id: str, thread_data: ThreadUpdate, db: Session = Depen
         if not user_id:
             raise HTTPException(
                 status_code=401, detail="User not authenticated.")
+        
+        thread_data.is_edited = True  # Ensure the thread is marked as edited
         return update_thread_in_db(thread_id, thread_data, user_id, db)
     except Exception:
         raise HTTPException(

@@ -4,6 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 import uuid
 
+from models import user
 from models.base import Base
 
 
@@ -13,12 +14,13 @@ class Comment(Base):
     issue_id = Column(PG_UUID(as_uuid=True), ForeignKey("issues.id"))
     username = Column(String)
     comment = Column(String, nullable=False)
-    likes = Column(Integer)
     is_reply = Column(Boolean)
     comment_id = Column(PG_UUID(as_uuid=True), ForeignKey("comments.id"))
     created_at = Column(TIMESTAMP(timezone=True))
     is_edited = Column(Boolean)
     is_deleted = Column(Boolean)
+    user_id = Column(PG_UUID(as_uuid=True), ForeignKey("users.id"))
     
     replies = relationship("Comment", back_populates="parent_comment", remote_side=[id])
     parent_comment = relationship("Comment", back_populates="replies", remote_side=[comment_id])
+    user = relationship("User", back_populates="comments")
