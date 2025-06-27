@@ -3,10 +3,10 @@ import uuid
 from sqlalchemy import Column, String, TIMESTAMP
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
+
 from .base import Base
 from .profile import Profile
 from .issue import Issue
-# from .follow import Follow
 
 
 class User(Base):
@@ -16,8 +16,8 @@ class User(Base):
     google_id = Column(String)
     email = Column(String)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False)
-
+    
     profile = relationship(Profile, back_populates="user", uselist=False)
     issues = relationship(Issue, back_populates="user")
     comments = relationship("Comment", back_populates="user")
-
+    saves = relationship("Save", back_populates="user")

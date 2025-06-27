@@ -2,7 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from psycopg2 import DatabaseError
 
 from schemas.profile import ProfileCreate
-from services.profile import get_profile_service, onboard_service, update_profile_service
+from services.profile import add_following_user, get_following_service, get_profile_service, \
+    onboard_service, update_profile_service, add_following_issue, add_following_dept, add_following_location, \
+    remove_following_dept, remove_following_issue, remove_following_user, remove_following_location
 from utils.db import get_db
 from utils.jwt_guard import get_current_user
 
@@ -77,7 +79,7 @@ def get_following(
         if not user_id:
             raise HTTPException(status_code=401, detail="Unauthorized")
         
-        return get_following(user_id, db)
+        return get_following_service(user_id, db)
     
     except HTTPException as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
@@ -88,7 +90,7 @@ def get_following(
         raise HTTPException(status_code=500, detail="Internal server error: " + str(e))
     
 @router.post('/follow/user/{following_user_id}')
-def add_following_user(
+def add_following_u(
     following_user_id: str,
     get_current_user=Depends(get_current_user),
     db=Depends(get_db)
@@ -109,7 +111,7 @@ def add_following_user(
         raise HTTPException(status_code=500, detail="Internal server error: " + str(e))
     
 @router.post('/follow/issue/{following_issue_id}')
-def add_following_issue(
+def add_following_i(
     following_issue_id: str,
     get_current_user=Depends(get_current_user),
     db=Depends(get_db)
@@ -130,7 +132,7 @@ def add_following_issue(
         raise HTTPException(status_code=500, detail="Internal server error: " + str(e))
     
 @router.post('/follow/dept/{following_dept_id}')
-def add_following_dept(
+def add_following_d(
     following_dept_id: str,
     get_current_user=Depends(get_current_user),
     db=Depends(get_db)
@@ -151,7 +153,7 @@ def add_following_dept(
         raise HTTPException(status_code=500, detail="Internal server error: " + str(e))
     
 @router.post('/follow/location/{following_location_id}')
-def add_following_location(
+def add_following(
     following_location_id: str,
     get_current_user=Depends(get_current_user),
     db=Depends(get_db)
@@ -172,7 +174,7 @@ def add_following_location(
         raise HTTPException(status_code=500, detail="Internal server error: " + str(e))
 
 @router.delete('/follow/user/{following_user_id}')
-def remove_following_user(
+def remove_following_u(
     following_user_id: str,
     get_current_user=Depends(get_current_user),
     db=Depends(get_db)
@@ -193,7 +195,7 @@ def remove_following_user(
         raise HTTPException(status_code=500, detail="Internal server error: " + str(e))
     
 @router.delete('/follow/issue/{following_issue_id}')
-def remove_following_issue(
+def remove_following_i(
     following_issue_id: str,
     get_current_user=Depends(get_current_user),
     db=Depends(get_db)
@@ -214,7 +216,7 @@ def remove_following_issue(
         raise HTTPException(status_code=500, detail="Internal server error: " + str(e))
     
 @router.delete('/follow/dept/{following_dept_id}')
-def remove_following_dept(
+def remove_following_d(
     following_dept_id: str,
     get_current_user=Depends(get_current_user),
     db=Depends(get_db)
@@ -235,7 +237,7 @@ def remove_following_dept(
         raise HTTPException(status_code=500, detail="Internal server error: " + str(e))
     
 @router.delete('/follow/location/{following_location_id}')
-def remove_following_location(
+def remove_following(
     following_location_id: str,
     get_current_user=Depends(get_current_user),
     db=Depends(get_db)

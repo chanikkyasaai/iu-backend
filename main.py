@@ -10,6 +10,11 @@ from routers.issues.issue_routes import router as issue_router
 from routers.auth import router as auth_router
 from routers.profile import router as profile_router
 from routers.google_oauth import router as google_oauth_router
+from routers.saves.save_routes import router as save_router
+from routers.get_desc_from_db import router as get_desc_from_db_router
+from routers.get_top_search import router as get_top_search_router
+
+from utils.mdb import init_indexes
 
 app = FastAPI()
 
@@ -17,6 +22,11 @@ app = FastAPI()
 def read_root():
     return {"Hello": "World"}
 
+
+@app.on_event("startup")
+async def startup_db():
+    await init_indexes()
+    
 
 def test_db():
     import logging
@@ -51,3 +61,6 @@ app.include_router(auth_router)
 app.include_router(issue_router)
 app.include_router(thread_router)
 app.include_router(comment_router)
+app.include_router(save_router)
+app.include_router(get_desc_from_db_router)
+app.include_router(get_top_search_router)

@@ -1,3 +1,4 @@
+import datetime
 from fastapi import APIRouter, HTTPException
 from fastapi import Depends
 from sqlalchemy.orm import Session
@@ -61,3 +62,21 @@ def delete_comment(comment_id: str, db: Session = Depends(get_db), current_user:
     except Exception:
         raise HTTPException(
             status_code=500, detail="Failed to delete comment. Please try again later.")    
+        
+@router.post("/{comment_id}/like")
+async def like_comment(comment_id: str, current_user: dict = Depends(get_current_user)):
+    try:
+        user_id = current_user.get("sub")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="User not authenticated.")
+        
+        from utils.mdb import comment_likes  # Import here to avoid circular dependency
+        await comment_likes.insert_one({
+            "comment_id": comment_id,
+            "user_id": user_id,
+            "created_at": datetime.datetime.utcnow()
+        })
+    except Exception:
+        raise HTTPException(400, "Already liked")
+    
+    return {"message": "Liked"}

@@ -3,6 +3,7 @@ from fastapi.params import Depends
 from fastapi.responses import JSONResponse
 from models.profile import Profile
 from utils.db import get_db
+from sqlalchemy.orm.attributes import flag_modified
 
 
 def onboard_service(user_data, user_id, db):
@@ -64,7 +65,7 @@ def update_profile_service(user_data, user_id, db):
         raise HTTPException(
             status_code=500, detail="Database error: " + str(e))
         
-def get_following(user_id, db):
+def get_following_service(user_id, db):
     try:
         profile = db.query(Profile).filter(Profile.user_id == user_id).first()
         if not profile:
@@ -98,6 +99,7 @@ def add_following_user(user_id, following_user_id, db):
 
         if following_user_id not in profile.following_users:
             profile.following_users.append(following_user_id)
+            flag_modified(profile, "following_users")
             db.commit()
             db.refresh(profile)
 
@@ -116,6 +118,7 @@ def remove_following_user(user_id, following_user_id, db):
 
         if profile.following_users and following_user_id in profile.following_users:
             profile.following_users.remove(following_user_id)
+            flag_modified(profile, "following_users")
             db.commit()
             db.refresh(profile)
 
@@ -136,6 +139,7 @@ def add_following_issue(user_id, issue_id, db):
 
         if issue_id not in profile.following_issues:
             profile.following_issues.append(issue_id)
+            flag_modified(profile, "following_issues")
             db.commit()
             db.refresh(profile)
 
@@ -153,6 +157,7 @@ def remove_following_issue(user_id, issue_id, db):
 
         if profile.following_issues and issue_id in profile.following_issues:
             profile.following_issues.remove(issue_id)
+            flag_modified(profile, "following_issues")
             db.commit()
             db.refresh(profile)
 
@@ -173,6 +178,7 @@ def add_following_dept(user_id, dept_id, db):
 
         if dept_id not in profile.following_depts:
             profile.following_depts.append(dept_id)
+            flag_modified(profile, "following_depts")
             db.commit()
             db.refresh(profile)
 
@@ -190,6 +196,7 @@ def remove_following_dept(user_id, dept_id, db):
 
         if profile.following_depts and dept_id in profile.following_depts:
             profile.following_depts.remove(dept_id)
+            flag_modified(profile, "following_depts")
             db.commit()
             db.refresh(profile)
 
@@ -210,6 +217,7 @@ def add_following_location(user_id, location_id, db):
 
         if location_id not in profile.following_locations:
             profile.following_locations.append(location_id)
+            flag_modified(profile, "following_locations")
             db.commit()
             db.refresh(profile)
 
@@ -227,6 +235,7 @@ def remove_following_location(user_id, location_id, db):
 
         if profile.following_locations and location_id in profile.following_locations:
             profile.following_locations.remove(location_id)
+            flag_modified(profile, "following_locations")
             db.commit()
             db.refresh(profile)
 

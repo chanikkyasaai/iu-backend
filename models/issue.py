@@ -29,3 +29,4 @@ class Issue(Base):
     user = relationship("User", back_populates="issues")
     employee = relationship("Employee", back_populates="issues")
     threads = relationship("Thread", back_populates="issue")
+    saves = relationship("Save", back_populates="issue")

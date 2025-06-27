@@ -1,3 +1,5 @@
+import datetime
+from bson import ObjectId
 from fastapi import APIRouter, HTTPException
 from fastapi import Depends
 from sqlalchemy.orm import Session
@@ -10,6 +12,7 @@ from services.threads.thread_services import (
     update_thread_in_db,
     delete_thread_in_db
 )
+from utils.mdb import thread_supports
 
 router = APIRouter(prefix="/threads", tags=["threads"])
 
@@ -66,3 +69,24 @@ def delete_thread(thread_id: str, db: Session = Depends(get_db), current_user: d
     except Exception:
         raise HTTPException(
             status_code=500, detail="Failed to delete thread. Please try again later.") 
+        
+@router.post("/{thread_id}/support")
+async def support_thread(thread_id: str, current_user: dict = Depends(get_current_user)):
+    try:
+        user_id = current_user.get("sub")
+        await thread_supports.insert_one({
+            "thread_id": ObjectId(thread_id),
+            "user_id": user_id,
+            "created_at": datetime.datetime.utcnow()
+        })
+    except Exception:
+        raise HTTPException(400, "Already supported")
+    return {"message": "Supported"}
+
+@router.get("/{thread_id}/supports")
+async def get_thread_supports(thread_id: str):
+    try:
+        supports = await thread_supports.find({"thread_id": ObjectId(thread_id)}).to_list(length=None)
+        return {"supports": supports}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to fetch supports: " + str(e))

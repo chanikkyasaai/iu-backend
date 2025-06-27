@@ -1,9 +1,12 @@
+import datetime
+from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from schemas.issue import IssueCreate, IssueUpdate
 from utils.db import get_db
 from services.issues.issue_services import delete_issue_by_id, get_latest_issues, create_issue_in_db, update_issue_in_db
 from utils.jwt_guard import get_current_user
+from utils.mdb import issue_likes, issue_shares, issue_supports, issue_views
 
 router = APIRouter(prefix="/issues", tags=["issues"])
 
@@ -70,3 +73,89 @@ def delete_issue(issue_id: str, db: Session = Depends(get_db), current_user: dic
         raise HTTPException(
             status_code=500, detail="Failed to delete issue. Please try again later.")
         
+@router.post("/{issue_id}/like")
+async def like_issue(issue_id: str, current_user: dict = Depends(get_current_user)):
+    try:
+        user_id = current_user.get("sub")
+        await issue_likes.insert_one({
+            "issue_id": ObjectId(issue_id),
+            "user_id": user_id,
+            "created_at": datetime.datetime.utcnow()
+        })
+    except Exception:
+        raise HTTPException(400, "Already liked")
+    return {"message": "Liked"}
+
+@router.post("/{issue_id}/support")
+async def support_issue(issue_id: str, current_user: dict = Depends(get_current_user)):
+    try:
+        user_id = current_user.get("sub")
+        await issue_supports.insert_one({
+            "issue_id": ObjectId(issue_id),
+            "user_id": user_id,
+            "created_at": datetime.datetime.utcnow()
+        })
+    except Exception:
+        raise HTTPException(400, "Already supported")
+    return {"message": "Supported"}
+
+@router.post("/{issue_id}/{platform}/share")
+async def share_issue(issue_id: str, platform: str, current_user: dict = Depends(get_current_user)):
+    try:
+        user_id = current_user.get("sub")
+        await issue_shares.insert_one({
+            "issue_id": ObjectId(issue_id),
+            "user_id": user_id,
+            "platform": platform,
+            "created_at": datetime.datetime.utcnow()
+        })
+    except Exception:
+        raise HTTPException(400, "Already shared")
+    return {"message": "Shared"}
+
+
+@router.post("/{issue_id}/view")
+async def increment_view(issue_id: str):
+    try:
+        await issue_views.update_one(
+            {"_id": ObjectId(issue_id)},
+            {"$inc": {"views": 1}}
+        )
+        return {"message": "View count incremented"}
+    except Exception:
+        raise HTTPException(status_code=500, detail="Failed to increment view count")
+
+
+@router.get("/{issue_id}/views")
+async def get_issue_with_views(issue_id: str):
+    issue = await issue_views.find_one({"_id": ObjectId(issue_id)})
+    if not issue:
+        raise HTTPException(404, detail="Issue not found")
+    return {
+        "issue_id": str(issue["_id"]),
+        "views": issue.get("views", 0)
+    }
+
+@router.get("/{issue_id}/likes")
+async def get_issue_likes(issue_id: str):
+    try:
+        likes = await issue_likes.count_documents({"issue_id": ObjectId(issue_id)})
+        return {"likes": likes}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to fetch likes: " + str(e))
+    
+@router.get("/{issue_id}/supports")
+async def get_issue_supports(issue_id: str):
+    try:
+        supports = await issue_supports.count_documents({"issue_id": ObjectId(issue_id)})
+        return {"supports": supports}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to fetch supports: " + str(e))
+    
+@router.get("/{issue_id}/shares")
+async def get_issue_shares(issue_id: str):
+    try:
+        shares = await issue_shares.count_documents({"issue_id": ObjectId(issue_id)})
+        return {"shares": shares}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to fetch shares: " + str(e))
