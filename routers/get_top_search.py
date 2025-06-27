@@ -8,14 +8,14 @@ from services.get_top_Searches_from_db import get_top_searches_from_db, get_top_
 router = APIRouter(prefix="/top", tags=["search"])
 
 @router.get("/search")
-def get_top_searches(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def get_top_searches(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     try:
         user_id = current_user.get("sub")
         if not user_id:
             raise HTTPException(status_code=401, detail="User not authenticated.")
         
         # Assuming a function get_top_searches_from_db exists to fetch top searches
-        return get_top_searches_from_db(db)
+        return await get_top_searches_from_db(db)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch top searches: {str(e)}")
     

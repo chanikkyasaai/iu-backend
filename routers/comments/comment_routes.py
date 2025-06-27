@@ -80,3 +80,12 @@ async def like_comment(comment_id: str, current_user: dict = Depends(get_current
         raise HTTPException(400, "Already liked")
     
     return {"message": "Liked"}
+
+@router.get("/{comment_id}/likes")
+async def get_comment_likes(comment_id: str):
+    try:
+        from utils.mdb import comment_likes  # Import here to avoid circular dependency
+        likes = await comment_likes.count_documents({"comment_id": comment_id})
+        return {"likes": likes, "comment_id": comment_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to fetch likes: " + str(e))

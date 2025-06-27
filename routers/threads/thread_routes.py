@@ -75,7 +75,7 @@ async def support_thread(thread_id: str, current_user: dict = Depends(get_curren
     try:
         user_id = current_user.get("sub")
         await thread_supports.insert_one({
-            "thread_id": ObjectId(thread_id),
+            "thread_id": (thread_id),
             "user_id": user_id,
             "created_at": datetime.datetime.utcnow()
         })
@@ -86,7 +86,7 @@ async def support_thread(thread_id: str, current_user: dict = Depends(get_curren
 @router.get("/{thread_id}/supports")
 async def get_thread_supports(thread_id: str):
     try:
-        supports = await thread_supports.find({"thread_id": ObjectId(thread_id)}).to_list(length=None)
-        return {"supports": supports}
+        supports = await thread_supports.count_documents({"thread_id": thread_id})
+        return {"supports": supports, "thread_id": thread_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail="Failed to fetch supports: " + str(e))

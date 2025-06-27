@@ -22,7 +22,6 @@ app = FastAPI()
 def read_root():
     return {"Hello": "World"}
 
-
 @app.on_event("startup")
 async def startup_db():
     await init_indexes()
