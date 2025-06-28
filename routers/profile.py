@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from psycopg2 import DatabaseError
 
-from schemas.profile import ProfileCreate
+from schemas.profile import ProfileCreate, ProfileUpdate
 from services.profile import add_following_user, get_following_service, get_profile_service, \
     onboard_service, update_profile_service, add_following_issue, add_following_dept, add_following_location, \
     remove_following_dept, remove_following_issue, remove_following_user, remove_following_location
+from utils.access_control import require_creator_or_admin
 from utils.db import get_db
 from utils.jwt_guard import get_current_user
 
@@ -38,7 +39,7 @@ def get_profile(
         user_id = get_current_user.get("sub")
         if not user_id:
             raise HTTPException(status_code=401, detail="Unauthorized")
-        
+                
         return get_profile_service(user_id, db)
     except HTTPException as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
@@ -50,7 +51,7 @@ def get_profile(
     
 @router.put("/")
 def update_profile(
-    user_data: ProfileCreate,
+    user_data: ProfileUpdate,
     get_current_user=Depends(get_current_user),
     db=Depends(get_db)
 ):

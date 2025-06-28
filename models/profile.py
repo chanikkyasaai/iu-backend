@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, String, JSON
+from sqlalchemy import Column, ForeignKey, Integer, String, JSON
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import relationship
 import uuid
@@ -14,5 +14,6 @@ class Profile(Base):
     following_issues = Column(JSON)
     following_depts = Column(JSON)
     following_locations = Column(JSON)
+    is_deleted = Column(Integer, default=1)
     
     user = relationship("User", back_populates="profile", uselist=False)

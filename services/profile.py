@@ -53,7 +53,7 @@ def update_profile_service(user_data, user_id, db):
         if not profile:
             raise HTTPException(status_code=404, detail="Profile not found")
 
-        for key, value in user_data.dict().items():
+        for key, value in user_data.dict(exclude_unset=True).items():
             setattr(profile, key, value)
 
         db.commit()

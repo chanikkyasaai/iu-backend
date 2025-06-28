@@ -18,10 +18,15 @@ class ProfileCreate(ProfileBase):
 
 
 class ProfileUpdate(BaseModel):
-    pass
+    fullname: Optional[str] = None
+    role: Optional[str] = None
+    following_users: Optional[List[str]] = Field(default_factory=list)
+    following_issues: Optional[List[str]] = Field(default_factory=list)
+    following_depts: Optional[List[str]] = Field(default_factory=list)
+    following_locations: Optional[List[str]] = Field(default_factory=list)
 
-# class Profile(ProfileBase):
-#     id: UUID
+class Profile(ProfileBase):
+    id: UUID
 
-#     class Config:
-#         orm_mode = True
+    class Config:
+        orm_mode = True

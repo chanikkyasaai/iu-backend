@@ -13,6 +13,7 @@ from routers.google_oauth import router as google_oauth_router
 from routers.saves.save_routes import router as save_router
 from routers.get_desc_from_db import router as get_desc_from_db_router
 from routers.get_top_search import router as get_top_search_router
+from routers.admin_routes.user_management import router as admin_router
 
 from utils.mdb import init_indexes
 
@@ -63,3 +64,4 @@ app.include_router(comment_router)
 app.include_router(save_router)
 app.include_router(get_desc_from_db_router)
 app.include_router(get_top_search_router)
+app.include_router(admin_router)

@@ -40,7 +40,6 @@ class IssueUpdate(BaseModel):
     current_status: Optional[str] = None
     issue_time: Optional[datetime] = None
     is_anonymous: Optional[bool] = None
-    priority: Optional[str] = None  # Default priority
     evidence_url: Optional[Any] = None
     is_edited: Optional[bool] = True
     is_deleted: Optional[bool] = None
