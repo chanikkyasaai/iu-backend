@@ -5,6 +5,7 @@ from datetime import datetime
 
 
 class IssueBase(BaseModel):
+    dept_id: Optional[UUID]
     issue_headline: Optional[str]
     issue_desc: Optional[str]
     issue_dept: Optional[Any]
@@ -28,7 +29,7 @@ class IssueCreate(IssueBase):
 
 
 class IssueUpdate(BaseModel):
-    
+    dept_id: Optional[UUID] = None
     issue_headline: Optional[str] = None
     issue_desc: Optional[str] = None
     issue_dept: Optional[str] = None

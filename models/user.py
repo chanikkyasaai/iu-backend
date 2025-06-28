@@ -21,3 +21,5 @@ class User(Base):
     issues = relationship(Issue, back_populates="user")
     comments = relationship("Comment", back_populates="user")
     saves = relationship("Save", back_populates="user")
+    officer = relationship("IssueDeptOfficer", back_populates="user")
+    dept = relationship("IssueDept", back_populates="user")

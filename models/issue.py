@@ -13,6 +13,7 @@ class Issue(Base):
     issue_headline = Column(String, nullable=False)
     issue_desc = Column(String, nullable=False)
     issue_dept = Column(JSON, nullable=False)
+    dept_id = Column(PG_UUID(as_uuid=True), ForeignKey("issue_depts.id"))
     issue_type = Column(JSON, nullable=False)
     village = Column(String)
     state = Column(String)
@@ -31,3 +32,4 @@ class Issue(Base):
     employee = relationship("Employee", back_populates="issues")
     threads = relationship("Thread", back_populates="issue")
     saves = relationship("Save", back_populates="issue")
+    dept = relationship("IssueDept", back_populates="issues")
