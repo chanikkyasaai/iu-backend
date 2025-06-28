@@ -3,6 +3,7 @@ from fastapi import Depends, Query, HTTPException
 from sqlalchemy import update
 from sqlalchemy.orm import Session
 from models.issue import Issue
+from utils import mdb
 from utils.db import get_db
 
 
@@ -22,6 +23,35 @@ def get_latest_issues(
     except Exception:
         raise HTTPException(
             status_code=500, detail="Failed to fetch issues. Please try again later.")
+        
+
+async def get_latest_issues_admin(
+    page: int = 1,
+    limit: int = 10,
+    db: Session = Depends(get_db)
+):
+    try:
+        offset = (page - 1) * limit
+
+        query = (
+            db.query(Issue)
+            .filter(Issue.is_deleted == False)
+            .order_by(Issue.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+        
+        issues = query.all()
+        result = []
+        for issue in issues:
+            total_supports = await mdb.issue_supports.count_documents(
+                {"issue_id": str(issue.id)})
+            result.append({"issue": issue, "supports": total_supports})
+        return result
+    except Exception:
+        raise HTTPException(
+            status_code=500, detail="Failed to fetch issues. Please try again later.")
+
 
 
 def create_issue_in_db(issue_data, db: Session, user_id: str):
@@ -74,3 +104,13 @@ def update_issue_in_db(issue_id: str, issue_data, db: Session, user_id: str):
     except Exception:
         raise HTTPException(
             status_code=500, detail="Failed to update issue. Please try again later.")
+        
+def get_issue_by_id(issue_id: str, db: Session):
+    try:
+        issue = db.query(Issue).filter(Issue.id == issue_id, Issue.is_deleted == False).first()
+        if not issue:
+            raise HTTPException(status_code=404, detail="Issue not found.")
+        return issue
+    except Exception:
+        raise HTTPException(
+            status_code=500, detail="Failed to fetch issue. Please try again later.")

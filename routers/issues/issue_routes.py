@@ -3,8 +3,9 @@ from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from schemas.issue import IssueCreate, IssueUpdate
+from utils.access_control import require_creator_or_admin
 from utils.db import get_db
-from services.issues.issue_services import delete_issue_by_id, get_latest_issues, create_issue_in_db, update_issue_in_db
+from services.issues.issue_services import delete_issue_by_id, get_latest_issues, create_issue_in_db, get_latest_issues_admin, update_issue_in_db, get_issue_by_id
 from utils.jwt_guard import get_current_user
 from utils.mdb import issue_likes, issue_shares, issue_supports, issue_views
 
@@ -18,7 +19,18 @@ def get_issues(limit: int = 10, cursor: str | None = None, db: Session = Depends
     except Exception:
         raise HTTPException(
             status_code=500, detail="Failed to fetch issues. Please try again later.")
-
+        
+@router.get("/admin&page={page}")
+async def get_issues_admin(page: int = 1, limit: int = 10, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    try:
+        if page < 1:
+            raise HTTPException(status_code=400, detail="Invalid page number.")
+        if current_user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Not authorized.")
+        return await get_latest_issues_admin(page=page, limit=limit, db=db)
+    except Exception:
+        raise HTTPException(
+            status_code=500, detail="Failed to fetch issues. Please try again later.")
 
 @router.post("/")
 def create_issue(issue_data: IssueCreate, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
@@ -27,6 +39,7 @@ def create_issue(issue_data: IssueCreate, db: Session = Depends(get_db), current
         if not user_id:
             raise HTTPException(
                 status_code=401, detail="User not authenticated.")
+        
         return create_issue_in_db(issue_data, db, user_id)
     except HTTPException as e:
         raise e
@@ -44,8 +57,15 @@ def update_issue(issue_id: str, issue_data: IssueUpdate, db: Session = Depends(g
                 status_code=401, detail="User not authenticated.")
             
         issue_data.is_edited = True  # Ensure is_edited is set to True on update
-            
-        return update_issue_in_db(issue_id, issue_data, db, user_id)
+        
+        issue = get_issue_by_id(issue_id, db)
+        if not issue:
+            raise HTTPException(status_code=404, detail="Issue not found.")
+
+        # Ensure access control (creator or admin)
+        require_creator_or_admin(str(issue.user_id))(current_user)
+                        
+        return update_issue_in_db(issue_id, issue_data, db, str(issue.user_id))
 
     except HTTPException as e:
         import logging
@@ -66,7 +86,15 @@ def delete_issue(issue_id: str, db: Session = Depends(get_db), current_user: dic
         if not user_id:
             raise HTTPException(
                 status_code=401, detail="User not authenticated.")
-        return delete_issue_by_id(issue_id, user_id, db)
+            
+        issue = get_issue_by_id(issue_id, db)
+        if not issue:
+            raise HTTPException(status_code=404, detail="Issue not found.")
+
+        # Ensure access control (creator or admin)
+        require_creator_or_admin(str(issue.user_id))(current_user)
+        
+        return delete_issue_by_id(issue_id, str(issue.user_id), db)
     except HTTPException as e:
         raise e
     except Exception:

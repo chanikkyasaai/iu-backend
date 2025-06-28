@@ -23,6 +23,7 @@ class Issue(Base):
     is_anonymous = Column(Boolean)
     evidence_url = Column(JSON, nullable=True)
     created_at = Column(TIMESTAMP(timezone=True))
+    priority = Column(String, nullable=False)
     is_edited = Column(Boolean, default=False)
     is_deleted = Column(Boolean, default=False)
 

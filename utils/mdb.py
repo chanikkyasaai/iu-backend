@@ -44,6 +44,4 @@ async def init_indexes():
     # Create indexes for issue_views
     await issue_views.create_index([("issue_id", 1), ("views", 1)], unique=True)
     
-    print("MongoDB URL:", MONGO_URL)
-
     await test_connection()

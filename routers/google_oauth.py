@@ -9,8 +9,12 @@ from models.user import User
 from fastapi import Depends
 import logging
 from sqlalchemy.exc import SQLAlchemyError
+from dotenv import load_dotenv
+import os
 
 from utils.jwt_guard import REFRESH_TOKEN_EXPIRE_DAYS, ACCESS_TOKEN_EXPIRE_MINUTES, create_refresh_token, create_access_token
+
+load_dotenv(".env")
 
 router = APIRouter(prefix="/oauth", tags=["auth"])
 
@@ -32,6 +36,17 @@ async def callback(request: Request, code: str, db: Session = Depends(get_db)):
         
         access_token_expires = timedelta(minutes=int(ACCESS_TOKEN_EXPIRE_MINUTES))
         refresh_token_expires = timedelta(days=int(REFRESH_TOKEN_EXPIRE_DAYS))
+        
+        admin_emails = [email.strip().lower() for email in os.getenv("ADMIN_EMAILS", "").split(",") if email.strip()][0]
+        print(admin_emails[0])
+        
+        email = user_info["email"].lower().strip()
+        if email in admin_emails:
+            role = "admin"
+        else:
+            role = "user"
+            
+        print(role)
         
         user_id = user_info.get('sub') or user_info.get('id')
         if not user_id:
@@ -57,6 +72,7 @@ async def callback(request: Request, code: str, db: Session = Depends(get_db)):
             data={
                 "sub": str(user.id),
                 "email": user.email,
+                "role": role,
             },
         )
 
@@ -65,6 +81,7 @@ async def callback(request: Request, code: str, db: Session = Depends(get_db)):
             data={
                 "sub": str(user.id),
                 "email": user.email,
+                "role": role,
             },
         )
         
