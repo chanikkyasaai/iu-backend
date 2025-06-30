@@ -1,5 +1,5 @@
 import os
-from jose import jwt
+from jose import ExpiredSignatureError, JWTError, jwt
 from datetime import datetime, timedelta
 from fastapi import HTTPException, Depends, Request, Cookie
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -39,7 +39,7 @@ def verify_token(token: str, token_type: str = "access"):
         if payload.get("type") != token_type:
             raise HTTPException(status_code=401, detail="Invalid token type")
         return payload
-    except (ValidationError):
+    except (JWTError, ExpiredSignatureError, ValidationError):
         raise HTTPException(
             status_code=401,
             detail="Could not validate credentials",

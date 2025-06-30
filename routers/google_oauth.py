@@ -89,7 +89,12 @@ async def callback(request: Request, code: str, db: Session = Depends(get_db)):
             f"User logged in with Google OAuth and access token: {access_token} \n Refresh token: {refresh_token}")
 
 
-        response = HTMLResponse()
+        html_content = """<script>
+            window.opener.postMessage('authenticated', 'http://localhost:5173')
+            window.close()
+            </script>
+            """
+        response = HTMLResponse(content=html_content)
         response.set_cookie(
             key="access_token",
             value=access_token,
