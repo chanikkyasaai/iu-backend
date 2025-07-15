@@ -17,9 +17,10 @@ class RefreshTokenRequest(BaseModel):
 @router.post("/refresh-token")
 def refresh_token(
     response: Response,
-    refresh_token: str = Cookie(None, alias="refresh_token")
+    data: RefreshTokenRequest,
 ):
     try:
+        refresh_token = data.refresh_token
         if not refresh_token:
             raise HTTPException(
                 status_code=401, detail="Refresh token is required.")
@@ -42,7 +43,7 @@ def refresh_token(
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Failed to refresh token: {str(e)}"
-        )        
+        )
 
 @router.post("/logout")
 def logout(response: Response):

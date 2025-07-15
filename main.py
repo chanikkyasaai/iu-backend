@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from psycopg2.extras import RealDictCursor
 from sqlalchemy import text
+from fastapi.middleware.cors import CORSMiddleware
 
 from utils.db import get_db
 
@@ -19,6 +20,15 @@ from routers.admin_routes.department_management import router as department_rout
 from utils.mdb import init_indexes
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    # or ["http://localhost:3000"] if that's your frontend
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 def read_root():

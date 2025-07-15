@@ -18,10 +18,10 @@ class IssueBase(BaseModel):
     issue_time: Optional[datetime]
     is_anonymous: Optional[bool] = False
     priority: Optional[str] = "low"  # Default priority
-    evidence_url: Optional[Any]
-    created_at: Optional[datetime] = None
-    is_edited: Optional[bool] = None
-    is_deleted: Optional[bool] = None
+    evidence_url: Optional[Any] = None
+    created_at: Optional[datetime] = datetime.now()
+    is_edited: Optional[bool] = False
+    is_deleted: Optional[bool] = False
 
 
 class IssueCreate(IssueBase):

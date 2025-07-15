@@ -18,7 +18,9 @@ def save_issue_service(issue_id, user_id, db):
         
         found = db.query(Save).filter(Save.issue_id == issue_id, Save.user_id == user_id).first()
         if found:
-            return {"error": "Issue already saved by user."}
+            db.delete(found)
+            db.commit()
+            return {"error": "Issue unsaved."}
 
         issue = db.query(Issue).filter(Issue.id == issue_id).first()
         if not issue:

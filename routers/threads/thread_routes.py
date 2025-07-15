@@ -74,6 +74,9 @@ def delete_thread(thread_id: str, db: Session = Depends(get_db), current_user: d
 async def support_thread(thread_id: str, current_user: dict = Depends(get_current_user)):
     try:
         user_id = current_user.get("sub")
+        
+        if thread_supports.find_one({"thread_id": thread_id, "user_id": user_id}):
+            await thread_supports.delete_one({"thread_id": thread_id, "user_id": user_id})
         await thread_supports.insert_one({
             "thread_id": (thread_id),
             "user_id": user_id,

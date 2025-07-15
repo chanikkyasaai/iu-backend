@@ -136,7 +136,7 @@ def add_following_issue(user_id, issue_id, db):
 
         if profile.following_issues is None:
             profile.following_issues = []
-
+            
         if issue_id not in profile.following_issues:
             profile.following_issues.append(issue_id)
             flag_modified(profile, "following_issues")

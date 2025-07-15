@@ -71,6 +71,9 @@ async def like_comment(comment_id: str, current_user: dict = Depends(get_current
             raise HTTPException(status_code=401, detail="User not authenticated.")
         
         from utils.mdb import comment_likes  # Import here to avoid circular dependency
+        
+        if comment_likes.find_one({"comment_id": comment_id, "user_id": user_id}):
+            await comment_likes.delete_one({"comment_id": comment_id, "user_id": user_id})
         await comment_likes.insert_one({
             "comment_id": comment_id,
             "user_id": user_id,

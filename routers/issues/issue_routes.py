@@ -1,8 +1,10 @@
 import datetime
 from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+from models.issue_depts import IssueDept
 from schemas.issue import IssueCreate, IssueUpdate
+from typing import Optional
 from utils.access_control import require_creator_or_admin
 from utils.db import get_db
 from services.issues.issue_services import delete_issue_by_id, get_latest_issues, create_issue_in_db, get_latest_issues_admin, update_issue_in_db, get_issue_by_id
@@ -11,14 +13,47 @@ from utils.mdb import issue_likes, issue_shares, issue_supports, issue_views
 
 router = APIRouter(prefix="/issues", tags=["issues"])
 
-
-@router.get("/")
-def get_issues(limit: int = 10, cursor: str | None = None, db: Session = Depends(get_db)):
+@router.get("")
+async def get_issues(
+    limit: int = Query(10, ge=1, le=100),
+    page: int = Query(1, ge=1),
+    cursor: Optional[str] = None,
+    state: Optional[str] = None,
+    district: Optional[str] = None,
+    taluk: Optional[str] = None,
+    area: Optional[str] = None,
+    issue_type: Optional[str] = None,
+    department: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
     try:
-        return get_latest_issues(cursor=cursor, limit=limit, db=db)
+        if page < 1:
+            raise HTTPException(status_code=400, detail="Invalid page number.")
+        
+        user_id = current_user.get("sub")
+        
+        if not user_id:
+            raise HTTPException(
+                status_code=401, detail="User not authenticated.")
+        
+        return await get_latest_issues(
+            page=page,  
+            cursor=cursor,
+            limit=limit,
+            db=db,
+            state=state,
+            district=district,
+            taluk=taluk,
+            area=area,
+            issue_type=issue_type,
+            department=department,
+            user_id = user_id
+        )
     except Exception:
         raise HTTPException(
-            status_code=500, detail="Failed to fetch issues. Please try again later.")
+            status_code=500, detail="Failed to fetch issues. Please try again later."
+        )
         
 @router.get("/admin&page={page}")
 async def get_issues_admin(page: int = 1, limit: int = 10, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
@@ -32,7 +67,7 @@ async def get_issues_admin(page: int = 1, limit: int = 10, db: Session = Depends
         raise HTTPException(
             status_code=500, detail="Failed to fetch issues. Please try again later.")
 
-@router.post("/")
+@router.post("")
 def create_issue(issue_data: IssueCreate, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     try:
         user_id = current_user.get("sub")
@@ -100,11 +135,31 @@ def delete_issue(issue_id: str, db: Session = Depends(get_db), current_user: dic
     except Exception:
         raise HTTPException(
             status_code=500, detail="Failed to delete issue. Please try again later.")
+       
+@router.get("/alldepts")
+def get_all_departments(db: Session = Depends(get_db)):
+    try:
+        departments = db.query(IssueDept).all()
         
+        result = []
+        
+        for department in departments:            
+            result.append({
+                "name" : department.dept,
+                "id" : department.id
+            })
+        return result
+    except Exception:
+        raise HTTPException(
+            status_code=500, detail="Failed to fetch departments. Please try again later.")
+       
 @router.post("/{issue_id}/like")
 async def like_issue(issue_id: str, current_user: dict = Depends(get_current_user)):
     try:
         user_id = current_user.get("sub")
+        
+        if issue_likes.find_one({"issue_id": issue_id, "user_id": user_id}):
+            await issue_likes.delete_one({"issue_id": issue_id, "user_id": user_id})
         await issue_likes.insert_one({
             "issue_id": issue_id,
             "user_id": user_id,
@@ -120,6 +175,12 @@ async def like_issue(issue_id: str, current_user: dict = Depends(get_current_use
 async def support_issue(issue_id: str, current_user: dict = Depends(get_current_user)):
     try:
         user_id = current_user.get("sub")
+        
+        found = await issue_supports.find_one({"issue_id": issue_id, "user_id": user_id})
+        if found:
+            await issue_supports.delete_one({"issue_id": issue_id, "user_id": user_id})
+            return {"message": "Unsupported"}
+        
         await issue_supports.insert_one({
             "issue_id": issue_id,
             "user_id": user_id,

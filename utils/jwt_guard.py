@@ -14,9 +14,6 @@ ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
 REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", 30))
 
-security = HTTPBearer()
-
-
 def create_access_token(data: dict):
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -49,17 +46,13 @@ def verify_token(token: str, token_type: str = "access"):
 
 def get_current_user(
     request: Request,
-    credentials: HTTPAuthorizationCredentials = Depends(security),
     access_token_cookie: str = Cookie(None, alias="access_token"),
     
 ):
     token = None
 
-    # 1. Try Authorization header
-    if credentials:
-        token = credentials.credentials
     # 2. Try cookie
-    elif access_token_cookie:
+    if access_token_cookie:
         token = access_token_cookie
     # 3. Try request cookies (for non-FastAPI clients)
     elif request:
