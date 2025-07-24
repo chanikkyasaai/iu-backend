@@ -77,6 +77,7 @@ def get_following(
 ):
     try:
         user_id = get_current_user.get("sub")
+        print(user_id)
         if not user_id:
             raise HTTPException(status_code=401, detail="Unauthorized")
         

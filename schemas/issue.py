@@ -51,3 +51,13 @@ class Issue(IssueBase):
 
     class Config:
         orm_mode = True
+
+
+class IssueBatchFilterRequest(BaseModel):
+    user_ids: Optional[list[UUID]] = None
+    dept_ids: Optional[list[UUID]] = None
+    issue_ids: Optional[list[UUID]] = None
+    states: Optional[list[str]] = None
+    districts: Optional[list[str]] = None
+    taluks: Optional[list[str]] = None
+    villages: Optional[list[str]] = None

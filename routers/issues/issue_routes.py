@@ -3,11 +3,11 @@ from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from models.issue_depts import IssueDept
-from schemas.issue import IssueCreate, IssueUpdate
+from schemas.issue import IssueCreate, IssueUpdate, IssueBatchFilterRequest
 from typing import Optional
 from utils.access_control import require_creator_or_admin
 from utils.db import get_db
-from services.issues.issue_services import delete_issue_by_id, get_latest_issues, create_issue_in_db, get_latest_issues_admin, update_issue_in_db, get_issue_by_id
+from services.issues.issue_services import delete_issue_by_id, get_latest_issues, create_issue_in_db, get_latest_issues_admin, update_issue_in_db, get_issue_by_id, get_issues_by_batch_filters
 from utils.jwt_guard import get_current_user
 from utils.mdb import issue_likes, issue_shares, issue_supports, issue_views
 
@@ -251,3 +251,23 @@ async def get_issue_shares(issue_id: str):
         return {"issue_id": issue_id, "platforms": await issue_shares.distinct("platform", {"issue_id": issue_id}), "total_shares": shares}
     except Exception as e:
         raise HTTPException(status_code=500, detail="Failed to fetch shares: " + str(e))
+
+@router.post("/batch_filter")
+async def batch_filter_issues(
+    filters: IssueBatchFilterRequest,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    try:
+        return await get_issues_by_batch_filters(
+            db=db,
+            user_ids=[str(uid) for uid in filters.user_ids] if filters.user_ids else None,
+            dept_ids=[str(did) for did in filters.dept_ids] if filters.dept_ids else None,
+            issue_ids=[str(iid) for iid in filters.issue_ids] if filters.issue_ids else None,
+            states=filters.states,
+            districts=filters.districts,
+            taluks=filters.taluks,
+            villages=filters.villages,
+        )
+    except Exception:
+        raise HTTPException(status_code=500, detail="Failed to batch filter issues. Please try again later.")
