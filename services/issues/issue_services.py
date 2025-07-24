@@ -271,13 +271,25 @@ def update_issue_in_db(issue_id: str, issue_data, db: Session, user_id: str):
             status_code=500, detail="Failed to update issue. Please try again later.")
 
 
-def get_issue_by_id(issue_id: str, db: Session):
+async def get_issue_by_id(issue_id: str, db: Session):
     try:
         issue = db.query(Issue).filter(Issue.id == issue_id,
-                                       Issue.is_deleted == False).first()
+                                        Issue.is_deleted == False).first()
+        
+        issue_views = await mdb.issue_views.count_documents({"issue_id": str(issue_id)})
+        issue_support = await mdb.issue_supports.count_documents({"issue_id": str(issue_id)})
+        issue_shares = await mdb.issue_shares.count_documents({"issue_id": str(issue_id)})
+        issue_likes = await mdb.issue_likes.count_documents({"issue_id": str(issue_id)})
+        
         if not issue:
             raise HTTPException(status_code=404, detail="Issue not found.")
-        return issue
+        return {
+            "issue": issue,
+            "views": issue_views,
+            "supports": issue_support,
+            "shares": issue_shares,
+            "likes": issue_likes
+        }
     except Exception:
         raise HTTPException(
             status_code=500, detail="Failed to fetch issue. Please try again later.")

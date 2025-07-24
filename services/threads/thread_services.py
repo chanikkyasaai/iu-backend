@@ -3,9 +3,9 @@ from models.thread import Thread
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from fastapi import HTTPException
+from utils.mdb import thread_supports
 
-
-def fetch_threads_by_issue_id(issue_id: str, user_id: str, db: Session):
+async def fetch_threads_by_issue_id(issue_id: str, user_id: str, db: Session):
     try:
         if not issue_id:
             raise HTTPException(
@@ -13,10 +13,22 @@ def fetch_threads_by_issue_id(issue_id: str, user_id: str, db: Session):
         if not user_id:
             raise HTTPException(status_code=400, detail="User ID is required.")
 
-        stmt = select(Thread).where(Thread.issue_id == issue_id,
-                                    Thread.is_deleted == False).order_by(Thread.created_at.desc())
+        stmt = select(Thread).where(
+            Thread.issue_id == issue_id,
+            Thread.is_deleted == False
+        ).order_by(Thread.created_at.desc())
+
         result = db.execute(stmt)
-        return result.scalars().all()
+        threads = result.scalars().all()
+
+        # Assuming Thread has a relationship 'thread_supports'
+        threads_with_supports = []
+        for thread in threads:
+            supports = await thread_supports.count_documents({"thread_id": thread.id})
+            is_supported = await thread_supports.find_one({"thread_id": thread.id, "user_id": user_id})
+            threads_with_supports.append({"thread": thread, "supports": supports, "is_supported": True if is_supported else False})
+
+        return threads_with_supports
     except HTTPException:
         raise
     except Exception:

@@ -3,15 +3,16 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from models.comment import Comment
 from schemas.comment import CommentCreate, CommentUpdate
+from utils.mdb import comment_likes
+from models.profile import Profile
 
-
-def fetch_comments_by_issue_id(issue_id: str, db: Session):
+async def fetch_comments_by_issue_id(issue_id: str, db: Session):
     try:
         top_level_comments = db.query(Comment).filter(
             Comment.issue_id == issue_id,
             Comment.is_reply == False,
             Comment.is_deleted == False
-        ).all()
+        ).order_by(Comment.created_at.desc()).all()
 
         comments_with_replies = []
 
@@ -22,9 +23,13 @@ def fetch_comments_by_issue_id(issue_id: str, db: Session):
                 Comment.is_reply == True,
                 Comment.is_deleted == False
             ).all()
+            likes = await comment_likes.count_documents({"comment_id": comment.id})
+            is_liked = await comment_likes.find_one({"comment_id": comment.id, "user_id": comment.user_id})
 
             comments_with_replies.append({
                 "comment": comment,
+                "supports": likes,
+                "is_supported": True if is_liked else False,
                 "replies": replies
             })
 
@@ -38,9 +43,11 @@ def fetch_comments_by_issue_id(issue_id: str, db: Session):
 
 def create_comment_in_db(comment_data, user_id: str, db: Session):
     try:
+        username = db.query(Profile).filter(Profile.user_id == user_id).first()
+        
         new_comment = Comment(
             issue_id=comment_data.issue_id,
-            username=comment_data.username,
+            username=username.fullname if username else None,
             comment=comment_data.comment,
             is_reply=comment_data.is_reply if comment_data.is_reply is not None else False,
             comment_id=comment_data.comment_id if comment_data.is_reply else None,

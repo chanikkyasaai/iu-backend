@@ -15,13 +15,13 @@ from services.comments.comment_services import (
 router = APIRouter(prefix="/comments", tags=["comments"])
 
 @router.get("/{issue_id}")
-def get_comments(issue_id: str, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def get_comments(issue_id: str, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     try:
         user_id = current_user.get("sub")
         if not user_id:
             raise HTTPException(
                 status_code=401, detail="User not authenticated.")
-        return fetch_comments_by_issue_id(issue_id, db)
+        return await fetch_comments_by_issue_id(issue_id, db)
     except Exception:
         raise HTTPException(
             status_code=500, detail="Failed to fetch comments. Please try again later.")

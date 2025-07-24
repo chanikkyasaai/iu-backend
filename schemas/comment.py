@@ -6,10 +6,10 @@ from datetime import datetime
 
 class CommentBase(BaseModel):
     issue_id: Optional[UUID]
-    username: Optional[str]
+    username: Optional[str] = None
     comment: Optional[str]
-    is_reply: Optional[bool]
-    comment_id: Optional[UUID]
+    is_reply: Optional[bool] = False
+    comment_id: Optional[UUID] = None
     is_edited: Optional[bool] = False
     is_deleted: Optional[bool] = False
 
@@ -32,4 +32,4 @@ class Comment(CommentBase):
     id: UUID
 
     class Config:
-        orm_mode = True
+        from_attributes = True

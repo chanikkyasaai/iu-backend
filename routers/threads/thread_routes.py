@@ -1,5 +1,4 @@
 import datetime
-from bson import ObjectId
 from fastapi import APIRouter, HTTPException
 from fastapi import Depends
 from sqlalchemy.orm import Session
@@ -18,13 +17,13 @@ router = APIRouter(prefix="/threads", tags=["threads"])
 
 
 @router.get("/{issue_id}")
-def get_threads(issue_id: str, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def get_threads(issue_id: str, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     try:
         user_id = current_user.get("sub")
         if not user_id:
             raise HTTPException(
                 status_code=401, detail="User not authenticated.")
-        return fetch_threads_by_issue_id(issue_id, user_id, db)
+        return await fetch_threads_by_issue_id(issue_id, user_id, db)
     except Exception:
         raise HTTPException(
             status_code=500, detail="Failed to fetch threads. Please try again later.")

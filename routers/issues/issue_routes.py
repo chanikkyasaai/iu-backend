@@ -1,5 +1,4 @@
 import datetime
-from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from models.issue_depts import IssueDept
@@ -55,6 +54,14 @@ async def get_issues(
             status_code=500, detail="Failed to fetch issues. Please try again later."
         )
         
+@router.get("/{issue_id}")
+async def get_issue(issue_id: str, db: Session = Depends(get_db)):
+    try:
+        return await get_issue_by_id(issue_id, db)
+    except Exception:
+        raise HTTPException(
+            status_code=500, detail="Failed to fetch issue. Please try again later.")
+        
 @router.get("/admin&page={page}")
 async def get_issues_admin(page: int = 1, limit: int = 10, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     try:
@@ -84,7 +91,7 @@ def create_issue(issue_data: IssueCreate, db: Session = Depends(get_db), current
 
 
 @router.put("/{issue_id}")
-def update_issue(issue_id: str, issue_data: IssueUpdate, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def update_issue(issue_id: str, issue_data: IssueUpdate, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     try:
         user_id = current_user.get("sub")
         if not user_id:
@@ -93,7 +100,8 @@ def update_issue(issue_id: str, issue_data: IssueUpdate, db: Session = Depends(g
             
         issue_data.is_edited = True  # Ensure is_edited is set to True on update
         
-        issue = get_issue_by_id(issue_id, db)
+        issue = await get_issue_by_id(issue_id, db)
+        issue = issue["issue"]
         if not issue:
             raise HTTPException(status_code=404, detail="Issue not found.")
 
@@ -115,14 +123,14 @@ def update_issue(issue_id: str, issue_data: IssueUpdate, db: Session = Depends(g
 
 
 @router.delete("/{issue_id}")
-def delete_issue(issue_id: str, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def delete_issue(issue_id: str, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     try:
         user_id = current_user.get("sub")
         if not user_id:
             raise HTTPException(
                 status_code=401, detail="User not authenticated.")
             
-        issue = get_issue_by_id(issue_id, db)
+        issue = await get_issue_by_id(issue_id, db)
         if not issue:
             raise HTTPException(status_code=404, detail="Issue not found.")
 

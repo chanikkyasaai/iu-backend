@@ -7,7 +7,8 @@ dotenv.load_dotenv(".env")
 
 MONGO_URL = os.getenv("MONGO_URL")
 
-client = AsyncIOMotorClient(MONGO_URL)
+client = AsyncIOMotorClient(
+    MONGO_URL, uuidRepresentation="standard")
 db = client["iu"]
 
 # Collections
